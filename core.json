@@ -1,0 +1,64 @@
+{
+  "variables": {
+    "profile": "env `AWS_PROFILE`",
+    "vpc_region": "ap-south-1",
+    "instance_type": "t2.small",
+    "ssh_username": "ec2-user"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `vpc_region`}}",
+      "associate_public_ip_address": "true",
+      "ami_virtualization_type": "hvm",
+      "instance_type": "{{user `instance_type`}}",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ami_name": "nomisma-docker-ec2-{{isotime \"2006-01-02-030405\"}}",
+      "tags": {
+          "Name": "amazon linux-docker-ec2 - 2 - core AMI",
+          "owner": "infra2021"
+      },
+      "ami_regions": [
+        "ap-south-1"
+      ],
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/xvda",
+          "volume_type": "gp2",
+          "volume_size": 20,
+          "encrypted": false,
+          "delete_on_termination": true
+        }
+      ],
+      "ami_description": "Nomisma core AMI",
+      "encrypt_boot": false,
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "amzn2-ami-hvm-*-x86_64-gp2"
+	},
+        "owners": "137112412989",
+        "most_recent": true
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "docker.sh",
+      "destination": "/tmp/docker.sh"
+    },
+    {
+      "type": "shell",
+      "inline": "/tmp/docker.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "manifest",
+      "output": "manifest-node.json",
+      "strip_path": true
+    }
+  ]
+}
+
